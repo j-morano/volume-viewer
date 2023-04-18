@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Volume Viewer
 GenericName=Image Viewer
-Exec=/run/media/morano/SW1000/OPTIMA/Source/volume-viewer/volume_viewer.py %F
+Exec=/path/to/volume_viewer.py %F
 Type=Application
 Terminal=false
 Categories=Graphics;RasterGraphics;Viewer;3DGraphics;
