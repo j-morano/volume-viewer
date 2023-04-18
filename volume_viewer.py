@@ -87,7 +87,9 @@ if __name__ == "__main__":
     if file_name.endswith(".npy"):
         data = np.load(file_name)  # type: np.ndarray
     elif file_name.endswith(".dcm"):
-        data = pydicom.dcmread(file_name).pixel_array
+        data_dcm = pydicom.dcmread(file_name)
+        data_dcm.SamplesPerPixel = 1
+        data = data_dcm.pixel_array
     else:
         raise ValueError("File type not supported")
 
@@ -99,5 +101,8 @@ if __name__ == "__main__":
 
     main.bind("<Right>", lambda _e: app.seek_next())
     main.bind("<Left>", lambda _e: app.seek_prev())
+    # Vim-like keybindings
+    main.bind("l", lambda _e: app.seek_next())
+    main.bind("h", lambda _e: app.seek_prev())
 
     app.mainloop()
