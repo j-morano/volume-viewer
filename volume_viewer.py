@@ -90,8 +90,17 @@ if __name__ == "__main__":
         data_dcm = pydicom.dcmread(file_name)
         data_dcm.SamplesPerPixel = 1
         data = data_dcm.pixel_array
+    elif (
+        file_name.endswith(".png")
+        or file_name.endswith(".jpg")
+        or file_name.endswith(".jpeg")
+    ):
+        data = np.array(PIL.Image.open(file_name))
     else:
         raise ValueError("File type not supported")
+
+    if len(data.shape) == 2:
+        data = np.expand_dims(data, axis=0)
 
     data = normalize(data)
 
