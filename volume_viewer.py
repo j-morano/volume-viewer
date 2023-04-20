@@ -26,26 +26,35 @@ class App(tk.Frame):
         # self.master.title('Image Viewer')
 
         self.data_index = 0
-        self.data = data_list[self.data_index]
         self.data_index_tv = tk.StringVar()
+        self.data = data_list[self.data_index]
         self.total_data = len(data_list) - 1
 
-        self.zoom = False
+        self.zoom_levels = [1.0, 2.0]
+        self.zoom_level = 1.0
+        self.zoom_level_tv = tk.StringVar()
+
         self.num_page = 0
-        self.total_pages = data.shape[0] - 1
         self.num_page_tv = tk.StringVar()
+        self.total_pages = data.shape[0] - 1
+
+        self.num_page_tv.set(str(self.num_page)+'/'+str(self.total_pages))
+        self.data_index_tv.set(str(self.data_index)+'/'+str(self.total_data))
+        self.zoom_level_tv.set(str(self.zoom_level))
 
         fram = tk.Frame(self)
         tk.Button(fram, text="Prev image", command=self.prev_image).pack(side=tk.LEFT)
         tk.Button(fram, text="Next image", command=self.next_image).pack(side=tk.LEFT)
         tk.Label(fram, textvariable=self.data_index_tv).pack(side=tk.LEFT)
-        tk.Button(fram, text="Prev slice", command=self.seek_prev).pack(side=tk.LEFT)
+        tk.Button(fram, text="Prev slice", command=self.seek_prev).pack(side=tk.LEFT, padx=(16, 0))
         tk.Button(fram, text="Next slice", command=self.seek_next).pack(side=tk.LEFT)
         tk.Label(fram, textvariable=self.num_page_tv).pack(side=tk.LEFT)
-        tk.Label(fram, text="Shape: "+str(self.data.shape)).pack(side=tk.RIGHT)
+        tk.Label(fram, text="Shape: "+str(self.data.shape)).pack(side=tk.RIGHT, padx=(16, 0))
         fram.pack(side=tk.TOP, fill=tk.BOTH)
+
         fram = tk.Frame(self)
-        tk.Button(fram, text="Toggle zoom (x2)", command=self.zoom_in).pack(side=tk.LEFT)
+        tk.Button(fram, text="Change zoom", command=self.zoom_in).pack(side=tk.LEFT)
+        tk.Label(fram, textvariable=self.zoom_level_tv).pack(side=tk.LEFT)
         fram.pack(side=tk.TOP, fill=tk.BOTH)
 
         tk.Label(self, text=stem).pack()
@@ -53,25 +62,24 @@ class App(tk.Frame):
         self.la = tk.Label(self)
         self.la.pack()
 
-
-        self.img = PIL.ImageTk.PhotoImage(PIL.Image.fromarray(self.data[0]))
+        self.img = PIL.ImageTk.PhotoImage(PIL.Image.fromarray(self.data[self.data_index]))
         self.chg_image()
-        self.num_page = 0
-        self.num_page_tv.set(str(self.num_page)+'/'+str(self.total_pages))
-        self.data_index_tv.set(str(self.data_index)+'/'+str(self.total_data))
 
         self.pack()
         
 
     def zoom_in(self):
-        self.zoom = not self.zoom
+        self.zoom_level = self.zoom_levels[
+            (self.zoom_levels.index(self.zoom_level) + 1) % len(self.zoom_levels)
+        ]
+        self.zoom_level_tv.set(str(self.zoom_level))
         self.chg_image()
 
     def chg_image(self):
-        if self.zoom:
+        if self.zoom_level != 1.0:
             # Zoom x2
-            w = self.data.shape[1] * 2
-            h = self.data.shape[2] * 2
+            w = int(self.data.shape[1] * self.zoom_level)
+            h = int(self.data.shape[2] * self.zoom_level)
             self.img = PIL.ImageTk.PhotoImage(
                 PIL.Image.fromarray(self.data[self.num_page])
                     .resize((h, w), PIL.Image.NEAREST)
@@ -105,7 +113,6 @@ class App(tk.Frame):
     def prev_image(self):
         if self.data_index <= 0:
             return
-        self.zoom = False
         self.data_index = self.data_index-1
         self.data = data_list[self.data_index]
         self.data_index_tv.set(str(self.data_index)+'/'+str(self.total_data))
@@ -117,7 +124,6 @@ class App(tk.Frame):
     def next_image(self):
         if self.data_index >= len(data_list)-1:
             return
-        self.zoom = False
         self.data_index = self.data_index+1
         self.data = data_list[self.data_index]
         self.data_index_tv.set(str(self.data_index)+'/'+str(self.total_data))
@@ -160,6 +166,7 @@ if __name__ == "__main__":
         data_list.append(data)
 
     main = tk.Tk()
+    main.title("Volume Viewer")
 
     app = App()
 
