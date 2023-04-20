@@ -30,6 +30,7 @@ class App(tk.Frame):
         self.data_index_tv = tk.StringVar()
         self.total_data = len(data_list) - 1
 
+        self.zoom = False
         self.num_page = 0
         self.total_pages = data.shape[0] - 1
         self.num_page_tv = tk.StringVar()
@@ -43,11 +44,15 @@ class App(tk.Frame):
         tk.Label(fram, textvariable=self.num_page_tv).pack(side=tk.LEFT)
         tk.Label(fram, text="Shape: "+str(self.data.shape)).pack(side=tk.RIGHT)
         fram.pack(side=tk.TOP, fill=tk.BOTH)
+        fram = tk.Frame(self)
+        tk.Button(fram, text="Toggle zoom (x2)", command=self.zoom_in).pack(side=tk.LEFT)
+        fram.pack(side=tk.TOP, fill=tk.BOTH)
+
+        tk.Label(self, text=stem).pack()
 
         self.la = tk.Label(self)
         self.la.pack()
 
-        tk.Label(self, text=stem).pack()
 
         self.img = PIL.ImageTk.PhotoImage(PIL.Image.fromarray(self.data[0]))
         self.chg_image()
@@ -56,10 +61,25 @@ class App(tk.Frame):
         self.data_index_tv.set(str(self.data_index)+'/'+str(self.total_data))
 
         self.pack()
+        
 
+    def zoom_in(self):
+        self.zoom = not self.zoom
+        self.chg_image()
 
     def chg_image(self):
-        self.img = PIL.ImageTk.PhotoImage(PIL.Image.fromarray(self.data[self.num_page]))
+        if self.zoom:
+            # Zoom x2
+            w = self.data.shape[1] * 2
+            h = self.data.shape[2] * 2
+            self.img = PIL.ImageTk.PhotoImage(
+                PIL.Image.fromarray(self.data[self.num_page])
+                    .resize((h, w), PIL.Image.NEAREST)
+            )
+        else:
+            self.img = PIL.ImageTk.PhotoImage(
+                PIL.Image.fromarray(self.data[self.num_page])
+            )
         self.la.config(
             image=self.img,
             bg="#000000",
@@ -85,6 +105,7 @@ class App(tk.Frame):
     def prev_image(self):
         if self.data_index <= 0:
             return
+        self.zoom = False
         self.data_index = self.data_index-1
         self.data = data_list[self.data_index]
         self.data_index_tv.set(str(self.data_index)+'/'+str(self.total_data))
@@ -96,6 +117,7 @@ class App(tk.Frame):
     def next_image(self):
         if self.data_index >= len(data_list)-1:
             return
+        self.zoom = False
         self.data_index = self.data_index+1
         self.data = data_list[self.data_index]
         self.data_index_tv.set(str(self.data_index)+'/'+str(self.total_data))
