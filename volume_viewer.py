@@ -27,8 +27,10 @@ class App(tk.Frame):
 
         self.data_index = 0
         self.data_index_tv = tk.StringVar()
-        self.data = data_list[self.data_index]
+        self.data = data_list[self.data_index]['data']
         self.total_data = len(data_list) - 1
+
+        self.filename_tv = tk.StringVar()
 
         self.zoom_levels = [1.0, 2.0]
         self.zoom_level = 1.0
@@ -57,13 +59,18 @@ class App(tk.Frame):
         tk.Label(fram, textvariable=self.zoom_level_tv).pack(side=tk.LEFT)
         fram.pack(side=tk.TOP, fill=tk.BOTH)
 
-        tk.Label(self, text=stem).pack()
+        # Entry with width equal to filename length
+        entry = tk.Entry(self, textvariable=self.filename_tv)
+        entry.pack()
+        entry.config(state='readonly', width=len(self.filename_tv.get()))
 
         self.la = tk.Label(self)
         self.la.pack()
 
         self.img = PIL.ImageTk.PhotoImage(PIL.Image.fromarray(self.data[self.data_index]))
         self.chg_image()
+
+        self.filename_tv.set(data_list[self.data_index]['filename'])
 
         self.pack()
         
@@ -94,6 +101,7 @@ class App(tk.Frame):
             width=self.img.width(),
             height=self.img.height()
         )
+        self.num_page_tv.set(str(self.num_page)+'/'+str(self.total_pages))
 
     def seek_prev(self):
         if self.num_page <= 0:
@@ -101,36 +109,34 @@ class App(tk.Frame):
         self.num_page=self.num_page-1
         # self.im.seek(self.num_page)
         self.chg_image()
-        self.num_page_tv.set(str(self.num_page)+'/'+str(self.total_pages))
 
     def seek_next(self):
         if self.num_page >= self.total_pages:
             return
         self.num_page = self.num_page+1
         self.chg_image()
-        self.num_page_tv.set(str(self.num_page)+'/'+str(self.total_pages))
 
     def prev_image(self):
         if self.data_index <= 0:
             return
         self.data_index = self.data_index-1
-        self.data = data_list[self.data_index]
+        self.data = data_list[self.data_index]['data']
+        self.filename_tv.set(data_list[self.data_index]['filename'])
         self.data_index_tv.set(str(self.data_index)+'/'+str(self.total_data))
         self.total_pages = self.data.shape[0] - 1
         self.num_page = 0
         self.chg_image()
-        self.num_page_tv.set(str(self.num_page)+'/'+str(self.total_pages))
 
     def next_image(self):
         if self.data_index >= len(data_list)-1:
             return
         self.data_index = self.data_index+1
-        self.data = data_list[self.data_index]
+        self.data = data_list[self.data_index]['data']
         self.data_index_tv.set(str(self.data_index)+'/'+str(self.total_data))
+        self.filename_tv.set(data_list[self.data_index]['filename'])
         self.total_pages = self.data.shape[0] - 1
         self.num_page = 0
         self.chg_image()
-        self.num_page_tv.set(str(self.num_page)+'/'+str(self.total_pages))
 
 
 if __name__ == "__main__":
@@ -163,7 +169,10 @@ if __name__ == "__main__":
             data = np.expand_dims(data, axis=0)
 
         data = normalize(data)
-        data_list.append(data)
+        data_list.append({
+            'filename': stem,
+            'data': data
+        })
 
     main = tk.Tk()
     main.title("Volume Viewer")
