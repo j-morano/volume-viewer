@@ -67,7 +67,6 @@ class App(tk.Frame):
         self.la = tk.Label(self)
         self.la.pack()
 
-        self.img = PIL.ImageTk.PhotoImage(PIL.Image.fromarray(self.data[self.data_index]))
         self.chg_image()
 
         self.filename_tv.set(data_list[self.data_index]['filename'])
@@ -120,17 +119,15 @@ class App(tk.Frame):
         if self.data_index <= 0:
             return
         self.data_index = self.data_index-1
-        self.data = data_list[self.data_index]['data']
-        self.filename_tv.set(data_list[self.data_index]['filename'])
-        self.data_index_tv.set(str(self.data_index)+'/'+str(self.total_data))
-        self.total_pages = self.data.shape[0] - 1
-        self.num_page = 0
-        self.chg_image()
+        self.update_info()
 
     def next_image(self):
         if self.data_index >= len(data_list)-1:
             return
         self.data_index = self.data_index+1
+        self.update_info()
+
+    def update_info(self):
         self.data = data_list[self.data_index]['data']
         self.data_index_tv.set(str(self.data_index)+'/'+str(self.total_data))
         self.filename_tv.set(data_list[self.data_index]['filename'])
@@ -179,6 +176,8 @@ if __name__ == "__main__":
 
     app = App()
 
+    ## Keybindings
+    # Arrow keybindings
     main.bind("<Down>", lambda _e: app.seek_next())
     main.bind("<Up>", lambda _e: app.seek_prev())
     main.bind("<Left>", lambda _e: app.prev_image())
