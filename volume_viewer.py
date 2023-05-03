@@ -30,6 +30,11 @@ class App(tk.Frame):
         self.data = data_list[self.data_index]['data']
         self.total_data = len(data_list) - 1
 
+        try:
+            real_shape = " " + data_list[self.data_index]['real_shape']
+        except KeyError:
+            real_shape = ""
+
         self.filename_tv = tk.StringVar()
 
         self.zoom_levels = [1.0, 2.0]
@@ -51,7 +56,7 @@ class App(tk.Frame):
         tk.Button(fram, text="Prev slice", command=self.seek_prev).pack(side=tk.LEFT, padx=(16, 0))
         tk.Button(fram, text="Next slice", command=self.seek_next).pack(side=tk.LEFT)
         tk.Label(fram, textvariable=self.num_page_tv).pack(side=tk.LEFT)
-        tk.Label(fram, text="Shape: "+str(self.data.shape)).pack(side=tk.RIGHT, padx=(16, 0))
+        tk.Label(fram, text="Shape: "+str(self.data.shape)+f"{real_shape}").pack(side=tk.RIGHT, padx=(16, 0))
         fram.pack(side=tk.TOP, fill=tk.BOTH)
 
         fram = tk.Frame(self)
@@ -145,12 +150,29 @@ if __name__ == "__main__":
 
     data_list = []
     for file_name in file_names:
+        real_shape = None
         if file_name.endswith(".npy"):
             data = np.load(file_name)  # type: np.ndarray
         elif file_name.endswith(".dcm"):
             data_dcm = pydicom.dcmread(file_name)
             data_dcm.SamplesPerPixel = 1
             data = data_dcm.pixel_array
+            num_slices = int(data_dcm[0x0028, 0x0008].value)
+            spacing_between_slices = float(data_dcm[0x0018, 0x0088].value)
+            bscan_spacing = data_dcm[0x0028, 0x0030].value
+            rows = int(data_dcm[0x0028, 0x0010].value)
+            cols = int(data_dcm[0x0028, 0x0011].value)
+            real_shape = [
+                num_slices*spacing_between_slices,
+                cols*bscan_spacing[0],
+                rows*bscan_spacing[1],
+            ]
+            # Convert real_shape to string for display with 2 decimal
+            #   places
+            real_shape = [
+                f"{x:.2f}" for x in real_shape
+            ]
+            real_shape = "["+" x ".join(real_shape)+"]"
         elif (
             file_name.endswith(".png")
             or file_name.endswith(".jpg")
@@ -166,10 +188,13 @@ if __name__ == "__main__":
             data = np.expand_dims(data, axis=0)
 
         data = normalize(data)
-        data_list.append({
+        data_item = {
             'filename': stem,
             'data': data
-        })
+        }
+        if real_shape is not None:
+            data_item['real_shape'] = real_shape
+        data_list.append(data_item)
 
     main = tk.Tk()
     main.title("Volume Viewer")
