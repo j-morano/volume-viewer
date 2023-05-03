@@ -30,10 +30,8 @@ class App(tk.Frame):
         self.data = data_list[self.data_index]['data']
         self.total_data = len(data_list) - 1
 
-        try:
-            real_shape = " " + data_list[self.data_index]['real_shape']
-        except KeyError:
-            real_shape = ""
+        self.shape_tv = tk.StringVar()
+        self.shape_tv.set(self.get_shape())
 
         self.filename_tv = tk.StringVar()
 
@@ -56,7 +54,7 @@ class App(tk.Frame):
         tk.Button(fram, text="Prev slice", command=self.seek_prev).pack(side=tk.LEFT, padx=(16, 0))
         tk.Button(fram, text="Next slice", command=self.seek_next).pack(side=tk.LEFT)
         tk.Label(fram, textvariable=self.num_page_tv).pack(side=tk.LEFT)
-        tk.Label(fram, text="Shape: "+str(self.data.shape)+f"{real_shape}").pack(side=tk.RIGHT, padx=(16, 0))
+        tk.Label(fram, textvariable=self.shape_tv).pack(side=tk.RIGHT, padx=(16, 0))
         fram.pack(side=tk.TOP, fill=tk.BOTH)
 
         fram = tk.Frame(self)
@@ -77,7 +75,13 @@ class App(tk.Frame):
         self.filename_tv.set(data_list[self.data_index]['filename'])
 
         self.pack()
-        
+
+    def get_shape(self) -> str:
+        try:
+            real_shape = " " + data_list[self.data_index]['real_shape']
+        except KeyError:
+            real_shape = ""
+        return "Shape: "+str(self.data.shape)+f"{real_shape}"
 
     def zoom_in(self):
         self.zoom_level = self.zoom_levels[
@@ -136,6 +140,7 @@ class App(tk.Frame):
         self.data = data_list[self.data_index]['data']
         self.data_index_tv.set(str(self.data_index)+'/'+str(self.total_data))
         self.filename_tv.set(data_list[self.data_index]['filename'])
+        self.shape_tv.set(self.get_shape())
         self.total_pages = self.data.shape[0] - 1
         self.num_page = 0
         self.chg_image()
