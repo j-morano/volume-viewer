@@ -157,22 +157,29 @@ if __name__ == "__main__":
             data_dcm = pydicom.dcmread(file_name)
             data_dcm.SamplesPerPixel = 1
             data = data_dcm.pixel_array
-            num_slices = int(data_dcm[0x0028, 0x0008].value)
-            spacing_between_slices = float(data_dcm[0x0018, 0x0088].value)
-            bscan_spacing = data_dcm[0x0028, 0x0030].value
-            rows = int(data_dcm[0x0028, 0x0010].value)
-            cols = int(data_dcm[0x0028, 0x0011].value)
-            real_shape = [
-                num_slices*spacing_between_slices,
-                cols*bscan_spacing[0],
-                rows*bscan_spacing[1],
-            ]
-            # Convert real_shape to string for display with 2 decimal
-            #   places
-            real_shape = [
-                f"{x:.2f}" for x in real_shape
-            ]
-            real_shape = "["+" x ".join(real_shape)+"]"
+            try:
+                num_slices = int(data_dcm[0x0028, 0x0008].value)
+                spacing_between_slices = float(data_dcm[0x0018, 0x0088].value)
+            except KeyError:
+                num_slices = 1
+                spacing_between_slices = 0
+            try:
+                bscan_spacing = data_dcm[0x0028, 0x0030].value
+                rows = int(data_dcm[0x0028, 0x0010].value)
+                cols = int(data_dcm[0x0028, 0x0011].value)
+                real_shape = [
+                    num_slices*spacing_between_slices,
+                    cols*bscan_spacing[0],
+                    rows*bscan_spacing[1],
+                ]
+                # Convert real_shape to string for display with 2 decimal
+                #   places
+                real_shape = [
+                    f"{x:.2f}" for x in real_shape
+                ]
+                real_shape = "["+" x ".join(real_shape)+"]"
+            except KeyError:
+                pass
         elif (
             file_name.endswith(".png")
             or file_name.endswith(".jpg")
