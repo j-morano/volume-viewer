@@ -47,6 +47,8 @@ class App(tk.Frame):
         self.data_index_tv.set(str(self.data_index)+'/'+str(self.total_data))
         self.zoom_level_tv.set(str(self.zoom_level))
 
+        self.projection_state = False
+
         fram = tk.Frame(self)
         tk.Button(fram, text="Prev image", command=self.prev_image).pack(side=tk.LEFT)
         tk.Button(fram, text="Next image", command=self.next_image).pack(side=tk.LEFT)
@@ -58,6 +60,7 @@ class App(tk.Frame):
         fram.pack(side=tk.TOP, fill=tk.BOTH)
 
         fram = tk.Frame(self)
+        tk.Button(fram, text="Projection", command=self.projection).pack(side=tk.LEFT)
         tk.Button(fram, text="Change zoom", command=self.zoom_in).pack(side=tk.LEFT)
         tk.Label(fram, textvariable=self.zoom_level_tv).pack(side=tk.LEFT)
         fram.pack(side=tk.TOP, fill=tk.BOTH)
@@ -75,6 +78,21 @@ class App(tk.Frame):
         self.filename_tv.set(data_list[self.data_index]['filename'])
 
         self.pack()
+
+    def projection(self):
+        self.projection_state = not self.projection_state
+        if self.projection_state:
+            proj = np.sum(self.data, axis=1)
+            proj = normalize(proj)
+            self.img = PIL.ImageTk.PhotoImage(PIL.Image.fromarray(proj))
+            self.la.config(
+                image=self.img,
+                bg="#000000",
+                width=self.img.width(),
+                height=self.img.height()
+            )
+        else:
+            self.chg_image()
 
     def get_shape(self) -> str:
         try:
