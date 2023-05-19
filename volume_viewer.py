@@ -3,6 +3,7 @@
 from pathlib import Path
 import sys
 import tkinter as tk
+import pickle
 
 import numpy as np
 import PIL.Image
@@ -12,8 +13,12 @@ import pydicom
 
 
 def normalize(data: np.ndarray) -> np.ndarray:
+    # Convert to float
+    data = data.astype(np.float32)
+    # Put NaNs to 0
+    data[np.isnan(data)] = 0
     data = data - np.min(data)
-    data = data / np.max(data)
+    data = data / (np.max(data) + 1e-6)
     data = data * 255
     data = data.astype(np.uint8)
     return data
@@ -171,6 +176,20 @@ if __name__ == "__main__":
 
     file_names = sys.argv[1:]
 
+    loaded_pickle = {}
+    new_file_names = []
+    for file_name in file_names:
+        if file_name.endswith(".pkl"):
+            with open(file_name, 'rb') as f:
+                pkl_data = pickle.load(f)
+            for key, value in pkl_data.items():
+                identifier = "{}{}.pkl".format(file_name.replace('pkl', ''), key)
+                loaded_pickle[identifier] = value 
+                new_file_names.append(identifier)
+        else:
+            new_file_names.append(file_name)
+    file_names = new_file_names
+
     data_list = []
     for file_name in file_names:
         real_shape = None
@@ -209,6 +228,8 @@ if __name__ == "__main__":
             or file_name.endswith(".jpeg")
         ):
             data = np.array(PIL.Image.open(file_name))
+        elif file_name.endswith(".pkl"):
+            data = loaded_pickle[file_name]
         else:
             raise ValueError("File type not supported")
 
