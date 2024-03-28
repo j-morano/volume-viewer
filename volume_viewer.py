@@ -184,7 +184,7 @@ if __name__ == "__main__":
                 pkl_data = pickle.load(f)
             for key, value in pkl_data.items():
                 identifier = "{}{}.pkl".format(file_name.replace('pkl', ''), key)
-                loaded_pickle[identifier] = value 
+                loaded_pickle[identifier] = value
                 new_file_names.append(identifier)
         else:
             new_file_names.append(file_name)
@@ -195,6 +195,9 @@ if __name__ == "__main__":
         real_shape = None
         if file_name.endswith(".npy"):
             data = np.load(file_name)  # type: np.ndarray
+        elif file_name.endswith(".npz"):
+            data = np.load(file_name)
+            data = data.get(data.files[0])  # type: ignore
         elif file_name.endswith(".dcm"):
             data_dcm = pydicom.dcmread(file_name)
             data_dcm.SamplesPerPixel = 1
