@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Volume Viewer
 GenericName=Image Viewer
-Exec=/path/to/volume_viewer.py %F
+Exec=/home/morano/Programs/volume-viewer/venv/bin/python /home/morano/Programs/volume-viewer/volume_viewer.py %F
 Type=Application
 Terminal=false
 Categories=Graphics;RasterGraphics;Viewer;3DGraphics;
