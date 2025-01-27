@@ -9,6 +9,7 @@ import numpy as np
 import PIL.Image
 import PIL.ImageTk
 import pydicom
+import nibabel as nib
 
 
 
@@ -38,6 +39,9 @@ class App(tk.Frame):
         self.shape_tv = tk.StringVar()
         self.shape_tv.set(self.get_shape())
 
+        self.data_range_tv = tk.StringVar()
+        self.data_range_tv.set('Range: ' + str(data_list[self.data_index]['data_range']))
+
         self.filename_tv = tk.StringVar()
 
         self.zoom_levels = [1.0, 2.0]
@@ -48,7 +52,8 @@ class App(tk.Frame):
         self.num_page_tv = tk.StringVar()
         self.total_pages = data.shape[0] - 1
 
-        self.num_page_tv.set(str(self.num_page)+'/'+str(self.total_pages))
+        self.num_digits = len(str(self.total_pages))
+        self.num_page_tv.set(str(self.num_page).zfill(self.num_digits)+'/'+str(self.total_pages))
         self.data_index_tv.set(str(self.data_index)+'/'+str(self.total_data))
         self.zoom_level_tv.set(str(self.zoom_level))
 
@@ -68,6 +73,7 @@ class App(tk.Frame):
         tk.Button(fram, text="Projection", command=self.projection).pack(side=tk.LEFT)
         tk.Button(fram, text="Change zoom", command=self.zoom_in).pack(side=tk.LEFT)
         tk.Label(fram, textvariable=self.zoom_level_tv).pack(side=tk.LEFT)
+        tk.Label(fram, textvariable=self.data_range_tv).pack(side=tk.RIGHT)
         fram.pack(side=tk.TOP, fill=tk.BOTH)
 
         # Entry with width equal to filename length
@@ -132,7 +138,7 @@ class App(tk.Frame):
             width=self.img.width(),
             height=self.img.height()
         )
-        self.num_page_tv.set(str(self.num_page)+'/'+str(self.total_pages))
+        self.num_page_tv.set(str(self.num_page).zfill(self.num_digits)+'/'+str(self.total_pages))
 
     def seek_prev(self):
         if self.num_page <= 0:
@@ -198,6 +204,8 @@ if __name__ == "__main__":
         elif file_name.endswith(".npz"):
             data = np.load(file_name)
             data = data.get(data.files[0])  # type: ignore
+        elif file_name.endswith(".nii") or file_name.endswith(".nii.gz"):
+            data = nib.load(file_name).get_fdata()  # type: ignore
         elif file_name.endswith(".dcm"):
             data_dcm = pydicom.dcmread(file_name)
             data_dcm.SamplesPerPixel = 1
@@ -241,10 +249,12 @@ if __name__ == "__main__":
         if len(data.shape) == 2:
             data = np.expand_dims(data, axis=0)
 
+        data_range = [float(data.min()), float(data.max())]
         data = normalize(data)
         data_item = {
             'filename': stem,
-            'data': data
+            'data': data,
+            'data_range': data_range,
         }
         if real_shape is not None:
             data_item['real_shape'] = real_shape
