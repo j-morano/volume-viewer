@@ -248,6 +248,8 @@ if __name__ == "__main__":
 
         if len(data.shape) == 2:
             data = np.expand_dims(data, axis=0)
+        elif len(data.shape) == 4:
+            data = np.squeeze(data, axis=0)
 
         data_range = [float(data.min()), float(data.max())]
         data = normalize(data)
