@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from nibabel.quaternions import norm
 
 from pathlib import Path
 import sys
@@ -202,8 +203,24 @@ if __name__ == "__main__":
         if file_name.endswith(".npy"):
             data = np.load(file_name)  # type: np.ndarray
         elif file_name.endswith(".npz"):
-            data = np.load(file_name)
-            data = data.get(data.files[0])  # type: ignore
+            npz_data = np.load(file_name)
+            # Add the different arrays in the npz file to the data_list
+            if len(npz_data.files) > 1:
+                data = None
+                for key in npz_data.files:
+                    c_data = normalize(npz_data.get(key))
+                    if c_data.ndim == 2:
+                        c_data = c_data[np.newaxis, ...]
+                    if data is None:
+                        data = c_data.copy()
+                    data_list.append({
+                        'filename': f"{Path(file_name).stem} ({key})",
+                        'data': c_data,
+                        'data_range': [float(c_data.min()), float(c_data.max())],
+                    })
+                continue
+            else:
+                data = data.get(npz_data.files[0])  # type: ignore
         elif file_name.endswith(".nii") or file_name.endswith(".nii.gz"):
             data = nib.load(file_name).get_fdata()  # type: ignore
         elif file_name.endswith(".dcm"):
