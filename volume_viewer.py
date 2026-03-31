@@ -220,7 +220,7 @@ if __name__ == "__main__":
                     })
                 continue
             else:
-                data = data.get(npz_data.files[0])  # type: ignore
+                data = npz_data.get(npz_data.files[0])  # type: ignore
         elif file_name.endswith(".nii") or file_name.endswith(".nii.gz"):
             data = nib.load(file_name).get_fdata()  # type: ignore
         elif file_name.endswith(".dcm"):
