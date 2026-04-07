@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from nibabel.quaternions import norm
 
 from pathlib import Path
 import sys
@@ -9,8 +8,6 @@ import pickle
 import numpy as np
 import PIL.Image
 import PIL.ImageTk
-import pydicom
-import nibabel as nib
 
 
 
@@ -221,9 +218,22 @@ if __name__ == "__main__":
                 continue
             else:
                 data = npz_data.get(npz_data.files[0])  # type: ignore
+        elif file_name.endswith(".zarr.zip"):
+            import zarr
+            data = np.array(zarr.open(zarr.storage.ZipStore(file_name, mode='r')))
+        elif file_name.endswith(".h5") or file_name.endswith(".hdf5"):
+            import h5py
+            with h5py.File(file_name, 'r') as f:
+                # If there are multiple datasets, take the first one
+                if len(f.keys()) > 1:
+                    data = f[list(f.keys())[0]][()]  # type: ignore
+                else:
+                    data = f.get(list(f.keys())[0])[()]  # type: ignore
         elif file_name.endswith(".nii") or file_name.endswith(".nii.gz"):
+            import nibabel as nib
             data = nib.load(file_name).get_fdata()  # type: ignore
         elif file_name.endswith(".dcm"):
+            import pydicom
             data_dcm = pydicom.dcmread(file_name)
             data_dcm.SamplesPerPixel = 1
             data = data_dcm.pixel_array
