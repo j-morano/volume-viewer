@@ -42,7 +42,7 @@ class App(tk.Frame):
 
         self.filename_tv = tk.StringVar()
 
-        self.zoom_levels = [1.0, 2.0]
+        self.zoom_levels = [0.5, 1.0, 2.0]
         self.zoom_level = 1.0
         self.zoom_level_tv = tk.StringVar()
 
@@ -200,12 +200,18 @@ if __name__ == "__main__":
         if file_name.endswith(".npy"):
             data = np.load(file_name)  # type: np.ndarray
         elif file_name.endswith(".npz"):
-            npz_data = np.load(file_name)
+            npz_data = np.load(file_name, allow_pickle=True)
             # Add the different arrays in the npz file to the data_list
             if len(npz_data.files) > 1:
                 data = None
                 for key in npz_data.files:
-                    c_data = normalize(npz_data.get(key))
+                    try:
+                        c_data = np.array(npz_data.get(key))
+                        data_range = [float(c_data.min()), float(c_data.max())]
+                        c_data = normalize(c_data)
+                    except ValueError:
+                        c_data = npz_data.get(key)
+                        data_range = [-1, -1]
                     if c_data.ndim == 2:
                         c_data = c_data[np.newaxis, ...]
                     if data is None:
@@ -213,7 +219,7 @@ if __name__ == "__main__":
                     data_list.append({
                         'filename': f"{Path(file_name).stem} ({key})",
                         'data': c_data,
-                        'data_range': [float(c_data.min()), float(c_data.max())],
+                        'data_range': data_range,
                     })
                 continue
             else:
